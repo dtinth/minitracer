@@ -1,6 +1,8 @@
 {
   "name": "minitracer",
   "version": "0.0.0",
+  "author": "Thai Pangsakulyanont <dtinth@spacet.me>",
+  "license": "MIT",
   "files": [
     "src",
     "lib",

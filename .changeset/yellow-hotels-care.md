@@ -1,0 +1,5 @@
+---
+'minitracer': patch
+---
+
+Add license
