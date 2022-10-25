@@ -1,0 +1,35 @@
+{
+  "name": "minitracer",
+  "version": "0.0.0",
+  "files": [
+    "src",
+    "lib",
+    "lib-commonjs",
+    "dist"
+  ],
+  "main": "./lib-commonjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./dist/minitracer.d.ts",
+  "docModel": "./dist/minitracer.api.json",
+  "devDependencies": {
+    "@changesets/cli": "2.25.0",
+    "@opentelemetry/api": "^1.2.0",
+    "@opentelemetry/sdk-node": "^0.33.0",
+    "@rushstack/heft": "0.45.12",
+    "@rushstack/heft-web-rig": "0.10.15",
+    "@types/heft-jest": "1.0.3",
+    "prettier": "2.7.1"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.2.0",
+    "@opentelemetry/sdk-node": "^0.33.0"
+  },
+  "scripts": {
+    "build": "heft build",
+    "test": "heft test",
+    "prepare": "heft build && ./scripts/generate-api-docs",
+    "release": "./scripts/release",
+    "format": "prettier --write .",
+    "api": "./scripts/generate-api-docs"
+  }
+}
