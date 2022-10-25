@@ -2,7 +2,13 @@ import { Context } from '@opentelemetry/api'
 import { tracing } from '@opentelemetry/sdk-node'
 import { SpanListener } from './SpanListener'
 
+/**
+ * @public
+ */
 export class MiniTracerSpanProcessor implements tracing.SpanProcessor {
+  /**
+   * @internal
+   */
   constructor(
     private _spanListeners: Set<SpanListener>,
     private _baseSpanProcessor: tracing.SpanProcessor,

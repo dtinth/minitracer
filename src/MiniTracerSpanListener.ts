@@ -8,20 +8,44 @@ import {
 import { tracing, core } from '@opentelemetry/sdk-node'
 import { SpanListener } from './SpanListener'
 
+/**
+ * @public
+ */
 export class MiniTracerSpanListener {
+  /**
+   * @beta
+   */
   spans: tracing.ReadableSpan[] = []
+
+  /**
+   * @beta
+   */
   parentSet = new Set<string>()
+
+  /**
+   * @beta
+   */
   rootId: string
+
+  /**
+   * @beta
+   */
   timestamp = core.hrTimeToMicroseconds(core.hrTime())
+
+  /**
+   * @internal
+   */
   constructor(rootSpan: Span, private _spanListeners: Set<SpanListener>) {
     const spanContext = rootSpan.spanContext()
     this.parentSet.add(spanContext.spanId)
     this.rootId = spanContext.spanId
     this._spanListeners.add(this)
   }
+
   dispose() {
     this._spanListeners.delete(this)
   }
+
   onStart(span: tracing.ReadableSpan) {
     const spanContext = span.spanContext()
     if (span.parentSpanId && this.parentSet.has(span.parentSpanId)) {
@@ -29,7 +53,9 @@ export class MiniTracerSpanListener {
       this.spans.push(span)
     }
   }
+
   onEnd(_span: tracing.ReadableSpan) {}
+
   toJSON(): MiniTracerSpanListenerJSONOutput {
     return {
       rootId: this.rootId,
@@ -37,6 +63,7 @@ export class MiniTracerSpanListener {
       spans: this.spans.map((s) => toJSON(s)),
     }
   }
+
   toString(options: MiniTracerSpanStringifyOptions) {
     const childrenMap = new Map<string, tracing.ReadableSpan[]>()
     for (const span of this.spans) {
@@ -50,12 +77,18 @@ export class MiniTracerSpanListener {
   }
 }
 
+/**
+ * @public
+ */
 export interface MiniTracerSpanListenerJSONOutput {
   rootId: string
   timestamp: number
   spans: MiniTracerSpanJSONOutput[]
 }
 
+/**
+ * @public
+ */
 export interface MiniTracerSpanJSONOutput {
   traceId: string
   parentId?: string
@@ -89,6 +122,9 @@ function toJSON(span: tracing.ReadableSpan): MiniTracerSpanJSONOutput {
   }
 }
 
+/**
+ * @public
+ */
 export interface MiniTracerSpanStringifyOptions {
   title?: string
   getLabel?: (span: tracing.ReadableSpan) => string
