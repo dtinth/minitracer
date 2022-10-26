@@ -8,14 +8,18 @@ import { Attributes } from '@opentelemetry/api';
 import { Context } from '@opentelemetry/api';
 import { Link } from '@opentelemetry/api';
 import { Span } from '@opentelemetry/api';
+import { SpanContext } from '@opentelemetry/api';
 import { SpanKind } from '@opentelemetry/api';
 import { SpanStatus } from '@opentelemetry/api';
 import { tracing } from '@opentelemetry/sdk-node';
 
 // @public (undocumented)
+export function defaultGetLabel(span: tracing.ReadableSpan): string;
+
+// @public (undocumented)
 export class MiniTracer {
     // (undocumented)
-    createSpanListener(rootSpan: Span): MiniTracerSpanListener;
+    createSpanListener(spanOrSpanContext: Pick<Span, 'spanContext'> | SpanContext): MiniTracerSpanListener;
     // (undocumented)
     createSpanProcessor(baseSpanProcessor?: tracing.NoopSpanProcessor): MiniTracerSpanProcessor;
     // (undocumented)
@@ -51,9 +55,9 @@ export interface MiniTracerSpanJSONOutput {
 }
 
 // @public (undocumented)
-export class MiniTracerSpanListener {
+export class MiniTracerSpanListener implements SpanListener {
     // @internal
-    constructor(rootSpan: Span, _spanListeners: Set<SpanListener>);
+    constructor(spanContext: SpanContext, _spanListeners: Set<SpanListener>);
     // (undocumented)
     dispose(): void;
     // (undocumented)
@@ -66,12 +70,18 @@ export class MiniTracerSpanListener {
     rootId: string;
     // @beta (undocumented)
     spans: tracing.ReadableSpan[];
+    // @internal (undocumented)
+    TEST_deferSpans(n: number): void;
+    // @internal (undocumented)
+    TEST_flushDeferredSpans(): void;
     // @beta (undocumented)
     timestamp: number;
     // (undocumented)
     toJSON(): MiniTracerSpanListenerJSONOutput;
     // (undocumented)
     toString(options: MiniTracerSpanStringifyOptions): string;
+    // @beta (undocumented)
+    traceId: string;
 }
 
 // @public (undocumented)
