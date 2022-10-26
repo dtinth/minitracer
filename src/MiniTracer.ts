@@ -1,4 +1,4 @@
-import { Span } from '@opentelemetry/api'
+import { Span, SpanContext } from '@opentelemetry/api'
 import { tracing } from '@opentelemetry/sdk-node'
 import { MiniTracerSpanListener } from './MiniTracerSpanListener'
 import { MiniTracerSpanProcessor } from './MiniTracerSpanProcessor'
@@ -23,7 +23,13 @@ export class MiniTracer {
   /**
    * @public
    */
-  createSpanListener(rootSpan: Span) {
-    return new MiniTracerSpanListener(rootSpan, this.spanListeners)
+  createSpanListener(
+    spanOrSpanContext: Pick<Span, 'spanContext'> | SpanContext,
+  ) {
+    const spanContext =
+      'spanContext' in spanOrSpanContext
+        ? spanOrSpanContext.spanContext()
+        : spanOrSpanContext
+    return new MiniTracerSpanListener(spanContext, this.spanListeners)
   }
 }

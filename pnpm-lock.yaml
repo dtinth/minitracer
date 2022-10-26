@@ -7,6 +7,7 @@ specifiers:
   '@rushstack/heft': 0.45.12
   '@rushstack/heft-web-rig': 0.10.15
   '@types/heft-jest': 1.0.3
+  '@types/node': ^18.11.5
   prettier: 2.7.1
 
 devDependencies:
@@ -16,6 +17,7 @@ devDependencies:
   '@rushstack/heft': 0.45.12
   '@rushstack/heft-web-rig': 0.10.15_@rushstack+heft@0.45.12
   '@types/heft-jest': 1.0.3
+  '@types/node': 18.11.5
   prettier: 2.7.1
 
 packages:

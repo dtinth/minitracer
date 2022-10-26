@@ -1,7 +1,7 @@
 import {
   Attributes,
   Link,
-  Span,
+  SpanContext,
   SpanKind,
   SpanStatus,
 } from '@opentelemetry/api'
@@ -11,7 +11,7 @@ import { SpanListener } from './SpanListener'
 /**
  * @public
  */
-export class MiniTracerSpanListener {
+export class MiniTracerSpanListener implements SpanListener {
   /**
    * @beta
    */
@@ -30,15 +30,29 @@ export class MiniTracerSpanListener {
   /**
    * @beta
    */
+  traceId: string
+
+  /**
+   * @beta
+   */
   timestamp = core.hrTimeToMicroseconds(core.hrTime())
+
+  /**
+   * For testing the case where we receive the spans out of order.
+   */
+  private TEST_deferred?: (() => void)[]
+  private TEST_deferredLeft = 0
 
   /**
    * @internal
    */
-  constructor(rootSpan: Span, private _spanListeners: Set<SpanListener>) {
-    const spanContext = rootSpan.spanContext()
+  constructor(
+    spanContext: SpanContext,
+    private _spanListeners: Set<SpanListener>,
+  ) {
     this.parentSet.add(spanContext.spanId)
     this.rootId = spanContext.spanId
+    this.traceId = spanContext.traceId
     this._spanListeners.add(this)
   }
 
@@ -47,8 +61,16 @@ export class MiniTracerSpanListener {
   }
 
   onStart(span: tracing.ReadableSpan) {
+    if (this.TEST_deferred && this.TEST_deferredLeft > 0) {
+      this.TEST_deferredLeft--
+      this.TEST_deferred.push(() => this.onStart(span))
+      return
+    }
     const spanContext = span.spanContext()
-    if (span.parentSpanId && this.parentSet.has(span.parentSpanId)) {
+    if (
+      (span.parentSpanId && this.parentSet.has(span.parentSpanId)) ||
+      span.spanContext().traceId === this.traceId
+    ) {
       this.parentSet.add(spanContext.spanId)
       this.spans.push(span)
     }
@@ -74,6 +96,27 @@ export class MiniTracerSpanListener {
       childrenMap.set(parent, children)
     }
     return toTree(this.rootId, childrenMap, options)
+  }
+
+  /**
+   * @internal
+   */
+  TEST_deferSpans(n: number) {
+    this.TEST_flushDeferredSpans()
+    this.TEST_deferred = []
+    this.TEST_deferredLeft = n
+  }
+
+  /**
+   * @internal
+   */
+  TEST_flushDeferredSpans() {
+    if (!this.TEST_deferred) {
+      return
+    }
+    for (const fn of this.TEST_deferred) {
+      fn()
+    }
   }
 }
 
@@ -136,17 +179,7 @@ function toTree(
   options: MiniTracerSpanStringifyOptions,
 ) {
   const title = options.title || '.'
-  const getLabel =
-    options.getLabel ||
-    ((span) => {
-      return (
-        span.name +
-        ` ${Math.round(core.hrTimeToMilliseconds(span.duration))}ms` +
-        (Object.keys(span.attributes).length > 0
-          ? ' ' + JSON.stringify(span.attributes)
-          : '')
-      )
-    })
+  const getLabel = options.getLabel || defaultGetLabel
   const lines: string[] = [title]
 
   // Generate box-drawing tree representation
@@ -182,4 +215,14 @@ function toTree(
   traverse(rootId)
 
   return lines.join('\n')
+}
+
+export function defaultGetLabel(span: tracing.ReadableSpan) {
+  return (
+    span.name +
+    ` ${Math.round(core.hrTimeToMilliseconds(span.duration))}ms` +
+    (Object.keys(span.attributes).length > 0
+      ? ' ' + JSON.stringify(span.attributes)
+      : '')
+  )
 }
